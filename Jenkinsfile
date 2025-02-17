@@ -12,8 +12,7 @@ pipeline {
               - name: kaniko
                 image: gcr.io/kaniko-project/executor:latest
                 command:
-                - /busybox/cat
-                tty: true
+                - /kaniko/executor
                 args:
                 - "--dockerfile=Dockerfile"
                 - "--context=git://github.com/boulaz2002/tehcargo_backend.git"
