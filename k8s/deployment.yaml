@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tehcargo-backend
+  labels:
+    app: tehcargo-backend
+spec:
+  replicas: 3  # Number of pods
+  selector:
+    matchLabels:
+      app: tehcargo-backend
+  template:
+    metadata:
+      labels:
+        app: tehcargo-backend
+    spec:
+      containers:
+        - name: tehcargo-backend
+          image: boulaz2002/tehcargo-backend:latest  # Uses the latest pushed image
+          ports:
+            - containerPort: 8000  # Assuming Django runs on port 8000
+            # Add more environment variables if needed
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tehcargo-backend-service
+spec:
+  selector:
+    app: tehcargo-backend
+  ports:
+    - protocol: TCP
+      port: 80  # Exposed service port
+      targetPort: 8000  # Match containerPort from Deployment
+  type: LoadBalancer  # Change to LoadBalancer if exposing externally
