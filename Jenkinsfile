@@ -11,6 +11,9 @@ pipeline {
               containers:
               - name: kaniko
                 image: gcr.io/kaniko-project/executor:latest
+                command:
+                - /busybox/cat
+                tty: true
                 args:
                 - "--dockerfile=Dockerfile"
                 - "--context=git://github.com/boulaz2002/tehcargo_backend.git"
@@ -30,21 +33,23 @@ pipeline {
         }
     }
 
-    stages {
-        stage('Checkout Code') {
-            steps {
-                git branch: 'main', url: 'https://github.com/boulaz2002/tehcargo_backend.git'
-            }
-        }
+    environment {
+        DOCKERHUB_USERNAME = "boulaz2002"
+        APP_NAME = "tehcargo_backend"
+        IMAGE_NAME = "${DOCKERHUB_USERNAME}/${APP_NAME}"
+        IMAGE_TAG = "latest"
+    }
 
+    stages {
         stage('Build and Push Image') {
             steps {
-                script {
+                container('kaniko') {
                     sh """
-                    echo "Kaniko build started..."
-                    kubectl delete pod kaniko -n jenkins || true
-                    kubectl apply -f kaniko.yaml
-                    kubectl wait --for=condition=complete pod/kaniko -n jenkins --timeout=300s
+                    echo "Starting Kaniko build..."
+                    /kaniko/executor --dockerfile=Dockerfile \
+                    --context=git://github.com/boulaz2002/tehcargo_backend.git \
+                    --destination=${IMAGE_NAME}:${IMAGE_TAG}
+                    echo "Kaniko build completed."
                     """
                 }
             }
