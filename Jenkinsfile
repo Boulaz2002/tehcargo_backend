@@ -1,22 +1,32 @@
 pipeline {
-    agent any
-
-    environment {
-        DOCKER_IMAGE = 'boulaz2002/tehcargo-backend'
+    agent {
+        kubernetes {
+            yaml """
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              labels:
+                some-label: jenkins-agent
+            spec:
+              containers:
+              - name: docker
+                image: docker:latest
+                command: ["cat"]
+                tty: true
+            """
+        }
     }
-
     stages {
         stage('Build & Push Docker Image') {
             steps {
-                container('kaniko') {
+                container('docker') {
                     sh '''
-                    /kaniko/executor --context=`pwd` \
-                      --dockerfile=Dockerfile \
-                      --destination=docker.io/${DOCKER_IMAGE}:${BUILD_NUMBER} \
-                      --destination=docker.io/${DOCKER_IMAGE}:latest
+                    docker build -t boulaz2002/tehcargo-backend:${BUILD_NUMBER} .
+                    docker push boulaz2002/tehcargo-backend:${BUILD_NUMBER}
                     '''
                 }
             }
         }
     }
 }
+
